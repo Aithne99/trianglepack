@@ -70,20 +70,17 @@ def build_cplex_model(jobs: List[job]):
             names = [f"{idx}:{j1.priority}", f"{idx2 + idx + 1}:{j2.priority}", f"I{idx}:{idx2 + idx + 1}"]
             cpx.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=names, val=[1, -1, N])], senses=['G'], rhs=[min(j1.priority, j2.priority)], names=[f"timepos{idx}:{idx2 + idx + 1}"])
             cpx.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=names, val=[-1, 1, -N])], senses=['G'], rhs=[min(j1.priority, j2.priority) - N], names=[f"timeneg{idx}:{idx2 + idx + 1}"])
-    cpx.write("prob.lp")
     cpx.solve()
-    print(cpx.solution)
+    print(cpx.solution.get_values()[1:len(jobs) + 1])
+    print(cpx.solution.get_objective_value())
 
 
 if __name__ == '__main__':
-    jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    #jobsizes = [3, 4, 5, 6]
+    #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
+    jobsizes = [20, 20, 10, 5, 5, 4, 4, 4, 4]
     jobsizes.sort(reverse=True)
-    if check_binary_tree(jobsizes):
-        print("Greedy is optimal")
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
-    joblist3 = [job(i) for i in jobsizes]
     greedy(joblist)
     for j in joblist:
         print(j.priority, j.start)
@@ -95,7 +92,9 @@ if __name__ == '__main__':
         print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
     print(f"tight fitting makespan {worst.start + worst.priority}")
-
-    build_cplex_model(joblist3)
+    if check_binary_tree(jobsizes):
+        print("Greedy is optimal")
+    else:
+        build_cplex_model(joblist)
 
 

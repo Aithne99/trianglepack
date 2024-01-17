@@ -28,7 +28,7 @@ def greedy(jobs: List[job]):
         jobs[i].start = jobs[maxidx].start + jobs[i].priority
         if 2 * jobs[i].priority > maxjob.gap:
             for jitr in jobs:
-                if jitr.start > jobs[i].start:
+                if jitr.start >= jobs[i].start and jitr != jobs[i]:
                     jitr.start += 2 * jobs[i].priority - maxjob.gap
         jobs[i].gap = max(jobs[i].gap, maxjob.gap - jobs[i].gap)
         maxjob.gap = jobs[i].priority
@@ -47,7 +47,7 @@ def if_it_fits_i_sits(jobs: List[job]):
         jobs[i].start = jobs[maxidx].start + jobs[i].priority
         if 2 * jobs[i].priority > maxjob.gap:
             for jitr in jobs:
-                if jitr.start > jobs[i].start:
+                if jitr.start >= jobs[i].start and jitr != jobs[i]:
                     jitr.start += 2 * jobs[i].priority - maxjob.gap
         jobs[i].gap = max(jobs[i].gap, maxjob.gap - jobs[i].gap)
         maxjob.gap = jobs[i].priority
@@ -77,7 +77,7 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    jobsizes = [20, 20, 10, 5, 5, 4, 4, 4, 4]
+    jobsizes = [8, 3, 2, 2, 8, 3, 2, 2, 8, 3, 2, 2]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

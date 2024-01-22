@@ -1,8 +1,7 @@
 import math
 from operator import attrgetter
 from typing import List
-import cplex
-import docplex.mp
+#import cplex
 
 
 class job:
@@ -10,6 +9,8 @@ class job:
         self.priority = p
         self.gap = p
         self.start = 0
+        self.wiggle = 0
+        self.child = None
 
 
 def check_binary_tree(sizes: List[int]):
@@ -27,11 +28,25 @@ def greedy(jobs: List[job]):
         maxidx = jobs.index(maxjob)
         jobs[i].start = jobs[maxidx].start + jobs[i].priority
         if 2 * jobs[i].priority > maxjob.gap:
+            deltatime = 2 * jobs[i].priority - maxjob.gap
+            if maxjob.child and maxjob.child.wiggle:
+                if deltatime >= maxjob.child.wiggle:
+                    maxjob.child.start += maxjob.child.wiggle
+                    deltatime -= maxjob.child.wiggle
+                    maxjob.child.wiggle = 0
+                else:
+                    maxjob.child.start += deltatime
+                    maxjob.child.wiggle -= deltatime
+                    deltatime = 0
             for jitr in jobs:
                 if jitr.start >= jobs[i].start and jitr != jobs[i]:
-                    jitr.start += 2 * jobs[i].priority - maxjob.gap
-        jobs[i].gap = max(jobs[i].gap, maxjob.gap - jobs[i].gap)
+                    jitr.start += deltatime
+        potentialgap = maxjob.gap - jobs[i].gap
+        if potentialgap > jobs[i].gap:
+            jobs[i].wiggle = potentialgap - jobs[i].gap
+            jobs[i].gap = potentialgap
         maxjob.gap = jobs[i].priority
+        maxjob.child = jobs[i]
         i += 1
 
 
@@ -46,15 +61,26 @@ def if_it_fits_i_sits(jobs: List[job]):
         maxidx = jobs.index(maxjob)
         jobs[i].start = jobs[maxidx].start + jobs[i].priority
         if 2 * jobs[i].priority > maxjob.gap:
+            deltatime = 2 * jobs[i].priority - maxjob.gap
+            if maxjob.child and maxjob.child.wiggle:
+                if deltatime >= maxjob.child.wiggle:
+                    maxjob.child.start += maxjob.child.wiggle
+                    deltatime -= maxjob.child.wiggle
+                    maxjob.child.wiggle = 0
+                else:
+                    maxjob.child.start += deltatime
+                    maxjob.child.wiggle -= deltatime
             for jitr in jobs:
                 if jitr.start >= jobs[i].start and jitr != jobs[i]:
-                    jitr.start += 2 * jobs[i].priority - maxjob.gap
+                    jitr.start += deltatime
         jobs[i].gap = max(jobs[i].gap, maxjob.gap - jobs[i].gap)
         maxjob.gap = jobs[i].priority
+        maxjob.child = jobs[i]
         i += 1
 
 
 def build_cplex_model(jobs: List[job]):
+    return
     #ezt kisebbre nem tudom allitani mert infeas lesz...
     N = jobs[0].priority * 10
     cpx = cplex.Cplex()
@@ -77,7 +103,12 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    jobsizes = [8, 3, 2, 2, 8, 3, 2, 2, 8, 3, 2, 2]
+    jobsizes = [8, 3, 2, 2]
+    for i in range(0, 4):
+        jobsizes.append(8)
+        jobsizes.append(3)
+        jobsizes.append(2)
+        jobsizes.append(2)
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

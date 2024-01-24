@@ -1,7 +1,7 @@
 import math
 from operator import attrgetter
 from typing import List
-#import cplex
+import cplex
 
 
 class job:
@@ -56,8 +56,9 @@ def greedy(jobs: List[job]):
 
 def if_it_fits_i_sits(jobs: List[job]):
     i = 1
+    # key=lambda j: j.gap + (j.child and j.child.wiggle or 0)
     while i < len(jobs):
-        fits = [j for j in jobs[0:i] if j.gap >= 2 * jobs[i].priority]
+        fits = [j for j in jobs[0:i] if j.gap + (j.child and j.child.wiggle or 0) >= 2 * jobs[i].priority]
         if fits:
             maxjob = min(fits, key=attrgetter('gap'))
         else:
@@ -67,7 +68,6 @@ def if_it_fits_i_sits(jobs: List[job]):
 
 
 def build_cplex_model(jobs: List[job]):
-    return
     #ezt kisebbre nem tudom allitani mert infeas lesz...
     N = jobs[0].priority * 10
     cpx = cplex.Cplex()
@@ -90,7 +90,8 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
+    #jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
+    jobsizes = [16, 6, 5, 4]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

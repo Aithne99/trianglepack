@@ -45,8 +45,22 @@ def greedy_base(maxjob: job, curjob: job, jobs: List[job]):
     maxjob.child = curjob
 
 
-
 def greedy(jobs: List[job]):
+    i = 1
+    while i < len(jobs):
+        maxjob = max(jobs[0:i], key=attrgetter('gap'), default=jobs[0])
+        maxidx = jobs.index(maxjob)
+        jobs[i].start = jobs[maxidx].start + jobs[i].priority
+        if 2 * jobs[i].priority > maxjob.gap:
+            for jitr in jobs:
+                if jitr.start >= jobs[i].start and jitr != jobs[i]:
+                    jitr.start += 2 * jobs[i].priority - maxjob.gap
+        jobs[i].gap = max(jobs[i].gap, maxjob.gap - jobs[i].gap)
+        maxjob.gap = jobs[i].priority
+        i += 1
+
+
+def greedy_wiggle(jobs: List[job]):
     i = 1
     while i < len(jobs):
         maxjob = max(jobs[0:i], key=attrgetter('gap'), default=jobs[0])
@@ -91,7 +105,7 @@ def build_cplex_model(jobs: List[job]):
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
     #jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
-    jobsizes = [16, 6, 5, 4]
+    jobsizes = [24, 13, 7, 7, 5, 5, 5, 3]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

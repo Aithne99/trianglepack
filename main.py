@@ -60,6 +60,18 @@ def greedy(jobs: List[job]):
         i += 1
 
 
+def bintree(jobs: List[job]):
+    i = 1
+    while i < len(jobs):
+        parent_idx = i + 1
+        while parent_idx % 2 != 0:
+            parent_idx = (parent_idx + 1) / 2
+        parent_idx = int((parent_idx / 2) - 1)
+        maxjob = jobs[parent_idx]
+        greedy_base(maxjob, jobs[i], jobs)
+        i += 1
+
+
 def greedy_wiggle(jobs: List[job]):
     i = 1
     while i < len(jobs):
@@ -104,8 +116,8 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    #jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
-    jobsizes = [24, 13, 7, 7, 5, 5, 5, 3]
+    jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
+    #jobsizes = [24, 6, 5, 4, 4, 4, 4]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
@@ -115,11 +127,11 @@ if __name__ == '__main__':
     worst = max(joblist, key=lambda j: j.start + j.priority)
     print(f"greedy makespan {worst.start + worst.priority}")
 
-    if_it_fits_i_sits(joblist2)
+    bintree(joblist2)
     for j in joblist2:
         print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
-    print(f"tight fitting makespan {worst.start + worst.priority}")
+    print(f"bintree makespan {worst.start + worst.priority}")
     if check_binary_tree(jobsizes):
         print("Greedy is optimal")
     else:

@@ -116,8 +116,9 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     #jobsizes = [89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2]
-    jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
-    #jobsizes = [24, 6, 5, 4, 4, 4, 4]
+    #jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
+    Mfakt = 15
+    jobsizes = [467 + Mfakt * 8, 467 + Mfakt * 8, 467 + Mfakt * 8, 156 + Mfakt * 4, 156 + Mfakt * 4, 156 + Mfakt * 4, 129 + Mfakt * 2, 131 + Mfakt * 2, 131 + Mfakt * 2, 86 + Mfakt * 2, 89 + Mfakt * 2, 91 + Mfakt * 2, 78 + Mfakt, 79 + Mfakt, 82 + Mfakt]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
@@ -127,7 +128,7 @@ if __name__ == '__main__':
     worst = max(joblist, key=lambda j: j.start + j.priority)
     print(f"greedy makespan {worst.start + worst.priority}")
 
-    bintree(joblist2)
+    if_it_fits_i_sits(joblist2)
     for j in joblist2:
         print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)

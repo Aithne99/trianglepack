@@ -14,7 +14,7 @@ def generate_input(length, mode):
 
 # length is just the length of the input
 def _generate_random_input(length):
-    return random.sample(range(1, length + 1), length)
+    return [random.randint(1, length * 2) for p in range(0, length)]
 
 
 # length is the number of fib sequence items used

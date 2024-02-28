@@ -153,8 +153,6 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     jobsizes = generate_input(20, "random")
-    Mfakt = 1
-    jobsizes = [467 + Mfakt * 8, 467 + Mfakt * 8, 467 + Mfakt * 8, 156 + Mfakt * 4, 156 + Mfakt * 4, 156 + Mfakt * 4, 129 + Mfakt * 2, 131 + Mfakt * 2, 131 + Mfakt * 2, 86 + Mfakt * 2, 89 + Mfakt * 2, 91 + Mfakt * 2, 78 + Mfakt, 79 + Mfakt, 82 + Mfakt]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

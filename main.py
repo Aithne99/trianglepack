@@ -132,7 +132,7 @@ def if_it_fits_i_sits(jobs: List[job]):
 
 def build_cplex_model(jobs: List[job]):
     #ezt kisebbre nem tudom allitani mert infeas lesz...
-    N = jobs[0].priority * 10
+    N = jobs[0].priority * len(jobs)
     cpx = cplex.Cplex()
     cpx.set_problem_type(cpx.problem_type.MILP)
     cpx.objective.set_sense(cpx.objective.sense.minimize)
@@ -152,7 +152,7 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = generate_input(20, "random")
+    jobsizes = generate_input(30, "random")
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

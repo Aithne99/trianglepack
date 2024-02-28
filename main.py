@@ -75,26 +75,33 @@ def bintree(jobs: List[job]):
             placement = int(placement)
         order[placement] = jobs[idx]
     starttimes = PriorityQueue()
-    # gap start, gap height, edge or corner gap (0: gap height is limited by upper corner 1: gap height is limited by diagonal edge)
-    starttimes.put((0, order[0].priority, 1))
-    starttimes.put((order[0].priority, order[0].priority, 0))
+    # gap start, gap height, edge or corner gap (0: gap height is limited by upper corner 1: gap height is limited by diagonal edge), 2: both, ceiling start (when both)
+    starttimes.put((0, order[0].priority, 1, 0))
+    starttimes.put((order[0].priority, order[0].priority, 0, 0))
     for job in order[1:]:
         if job is None:
             continue
         while True:
+            # job.prio = 160, testtime: (1425, 475, 0, 950)
             testtime = starttimes.get()
             if job.priority < (testtime[1]):
                 nexttime = starttimes.get()
-                job.start = testtime[0] + testtime[2] * job.priority
-                starttimes.put((job.start, job.priority, 1))
-                starttimes.put((job.start + job.priority, testtime[1], 0))
+                if testtime[2] == 2:
+                    possiblestart = max(testtime[3] + job.priority, testtime[0])
+                    job.start = possiblestart
+                else:
+                    job.start = testtime[0] + testtime[2] * job.priority
+                starttimes.put((job.start, job.priority, 1, 0))
                 if job.start + job.priority < nexttime[0]:
+                    starttimes.put((job.start + job.priority, testtime[1], 2, testtime[3]))
                     starttimes.put(nexttime)
+                else:
+                    starttimes.put((job.start + job.priority, nexttime[1], 0, job.start))
                 break
             if starttimes.empty():
                 job.start = testtime[0]
-                starttimes.put((job.start, job.priority, 1))
-                starttimes.put((job.start + job.priority, job.priority, 0))
+                starttimes.put((job.start, job.priority, 1, 0))
+                starttimes.put((job.start + job.priority, job.priority, 0, job.start))
                 break
 
 
@@ -142,11 +149,11 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = [13, 13, 8, 5, 5, 3, 3, 3, 3]
+    #jobsizes = [13, 13, 8, 5, 5, 3, 3, 3, 3]
     #jobsizes = [8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2, 8, 2.9, 2, 2]
     #jobsizes = [8, 3, 3, 2]
-    Mfakt = 2
-    #jobsizes = [467 + Mfakt * 8, 467 + Mfakt * 8, 467 + Mfakt * 8, 156 + Mfakt * 4, 156 + Mfakt * 4, 156 + Mfakt * 4, 129 + Mfakt * 2, 131 + Mfakt * 2, 131 + Mfakt * 2, 86 + Mfakt * 2, 89 + Mfakt * 2, 91 + Mfakt * 2, 78 + Mfakt, 79 + Mfakt, 82 + Mfakt]
+    Mfakt = 1
+    jobsizes = [467 + Mfakt * 8, 467 + Mfakt * 8, 467 + Mfakt * 8, 156 + Mfakt * 4, 156 + Mfakt * 4, 156 + Mfakt * 4, 129 + Mfakt * 2, 131 + Mfakt * 2, 131 + Mfakt * 2, 86 + Mfakt * 2, 89 + Mfakt * 2, 91 + Mfakt * 2, 78 + Mfakt, 79 + Mfakt, 82 + Mfakt]
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

@@ -85,6 +85,8 @@ def bintree(jobs: List[job]):
         while True:
             testtime = starttimes.get()
             if job.priority < (testtime[1]):
+                if (starttimes.empty()):
+                    raise RuntimeError("asd")
                 nexttime = starttimes.get()
                 if testtime[2] == 2:
                     possiblestart = max(testtime[3] + job.priority, testtime[0])
@@ -106,7 +108,10 @@ def bintree(jobs: List[job]):
                 starttimes.put((job.start, job.priority, 1, job.start))
                 starttimes.put((job.start + job.priority, job.priority, 0, job.start))
                 break
-
+    for j in order:
+        if j is None:
+            continue
+        print(j.priority, j.start)
 
 
 def greedy_wiggle(jobs: List[job]):
@@ -152,24 +157,26 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = generate_input(30, "random")
+    jobsizes = generate_input("pow3", 4)
+
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
     greedy(joblist)
-    for j in joblist:
-        print(j.priority, j.start)
+    #for j in joblist:
+    #    print(j.priority, j.start)
     worst = max(joblist, key=lambda j: j.start + j.priority)
     print(f"greedy makespan {worst.start + worst.priority}")
 
     bintree(joblist2)
-    for j in joblist2:
-        print(j.priority, j.start)
+    #for j in joblist2:
+    #    print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
     print(f"bintree makespan {worst.start + worst.priority}")
     if check_binary_tree(jobsizes):
         print("Greedy is optimal")
     else:
-        build_cplex_model(joblist)
+        #build_cplex_model(joblist)
+        pass
 
 

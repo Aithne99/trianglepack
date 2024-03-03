@@ -99,9 +99,11 @@ def bintree(jobs: List[job]):
                     starttimes.put(nexttime)
                 else:
                     ceilheight = nexttime[1]
+                    ceilstart = nexttime[3]
                     if starttimes.qsize() == 1:
                         ceilheight = job.priority
-                    starttimes.put((job.start + job.priority, ceilheight, 0, job.start))
+                        ceilstart = job.start
+                    starttimes.put((job.start + job.priority, ceilheight, 0, ceilstart))
                 break
             if starttimes.empty():
                 job.start = testtime[0]
@@ -157,7 +159,7 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = generate_input("pow3", 4)
+    jobsizes = generate_input("pow3", 2)
 
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]

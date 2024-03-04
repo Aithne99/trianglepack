@@ -93,17 +93,29 @@ def bintree(jobs: List[job]):
                     job.start = possiblestart
                 else:
                     job.start = testtime[0] + testtime[2] * job.priority
-                starttimes.put((job.start, job.priority, 1, job.start))
                 if job.start + job.priority < nexttime[0]:
                     starttimes.put((job.start + job.priority, testtime[1], 2, testtime[3]))
                     starttimes.put(nexttime)
                 else:
-                    ceilheight = nexttime[1]
-                    ceilstart = nexttime[3]
-                    if starttimes.qsize() == 1:
+                    temptime = nexttime
+                    if starttimes.empty():
                         ceilheight = job.priority
                         ceilstart = job.start
+                    else:
+                        # pop all the ones we've overgone
+                        while True:
+                            temptime = nexttime
+                            if starttimes.empty():
+                                temptime = nexttime
+                                break
+                            nexttime = starttimes.get()
+                            if job.start + job.priority < nexttime[0] or starttimes.empty():
+                                break
+                        ceilheight = temptime[1]
+                        ceilstart = temptime[3]
+                        starttimes.put(nexttime)
                     starttimes.put((job.start + job.priority, ceilheight, 0, ceilstart))
+                starttimes.put((job.start, job.priority, 1, job.start))
                 break
             if starttimes.empty():
                 job.start = testtime[0]
@@ -159,14 +171,14 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = generate_input("pow3", 2)
+    jobsizes = generate_input("pow3", 3)
 
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
     greedy(joblist)
-    #for j in joblist:
-    #    print(j.priority, j.start)
+    for j in joblist:
+        print(j.priority, j.start)
     worst = max(joblist, key=lambda j: j.start + j.priority)
     print(f"greedy makespan {worst.start + worst.priority}")
 

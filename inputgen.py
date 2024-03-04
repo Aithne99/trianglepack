@@ -37,15 +37,18 @@ def _generate_false_matching_input(length):
 def _generate_pow3_input(length):
     if length < 1:
         return [3, 3]
-    arr = [3 ** length, 3 ** length, 3 ** (length - 1), 3 ** (length - 1), 3 ** (length - 1), 3 ** (length - 1)]
+    arr = [3 ** (length - 1), 3 ** (length - 1), 3 ** (length - 2), 3 ** (length - 2), 3 ** (length - 2), 3 ** (length - 2)]
     if length < 2:
         print("nemár")
         return arr
     length = length - 2
-    pow2 = 4
     while length >= 0:
-        for i in range(0, pow2 + 2 * pow2):
-            arr.append(3 ** length)
+        blowup = arr[1] * 2
+        backuparr = [elem for elem in arr]
+        arr = [elem * blowup for elem in arr]
+        arrlen = len(arr)
+        for i in range(0, arrlen):
+            for elem in backuparr[1:]:
+                arr.append(elem)
         length = length - 1
-        pow2 = 4 * pow2
     return arr

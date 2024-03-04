@@ -98,9 +98,11 @@ def bintree(jobs: List[job]):
                     starttimes.put(nexttime)
                 else:
                     temptime = nexttime
+                    mode = 2
                     if starttimes.empty():
                         ceilheight = job.priority
                         ceilstart = job.start
+                        mode = 0
                     else:
                         # pop all the ones we've overgone
                         while True:
@@ -114,7 +116,7 @@ def bintree(jobs: List[job]):
                         ceilheight = temptime[1]
                         ceilstart = temptime[3]
                         starttimes.put(nexttime)
-                    starttimes.put((job.start + job.priority, ceilheight, 0, ceilstart))
+                    starttimes.put((job.start + job.priority, ceilheight, mode, ceilstart))
                 starttimes.put((job.start, job.priority, 1, job.start))
                 break
             if starttimes.empty():
@@ -172,7 +174,8 @@ def build_cplex_model(jobs: List[job]):
 
 if __name__ == '__main__':
     jobsizes = generate_input("pow3", 3)
-
+    #jobsizes = [324,162,54,54,54,54,18,18,18,18,18,18,18,18,18,18,18,18,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    print(len(jobsizes))
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]

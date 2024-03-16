@@ -138,39 +138,6 @@ def greedy_wiggle(jobs: List[job]):
         i += 1
 
 
-def placement_to_idx(place: int):
-    if not place:
-        return 0
-    treeheight = math.ceil(math.log(place + 1, 2))
-    size = int(math.pow(2, treeheight))
-    numlen = math.log(size, 2) + 1
-
-    rowidx_searcher = 2
-    rownum = 1
-
-    while place % rowidx_searcher == 0:
-        rowidx_searcher *= 2
-        rownum += 1
-
-    row_idx = treeheight - rownum
-    inrow_idx = place // rowidx_searcher
-    begin_idx = size // rowidx_searcher
-    idx = begin_idx + inrow_idx
-    placement = size / 2
-    cap = math.ceil(math.log(idx + 1, 2)) + 1
-    for logidx in range(2, cap):
-        sign = idx & (1 << cap - 1 - logidx) and 1 or -1
-        placement += sign * size / math.pow(2, logidx)
-        placement = int(placement)
-
-    print(placement)
-    print(place)
-
-    assert(placement == place)
-
-    pass
-
-
 def if_it_fits_i_sits(jobs: List[job]):
     i = 1
     # key=lambda j: j.gap + (j.child and j.child.wiggle or 0)

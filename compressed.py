@@ -64,9 +64,15 @@ def bintree_compressed(jobs: compressed_input):
     priority = jobs.get_idx(0)
     starttimes.put((0, priority, 1, 0))
     starttimes.put((priority, priority, 0, 0))
+    info_unit = jobs.get_size() / 10000
+    infocounter = 0
     makespan = priority
     start = 0
     for pack_idx in range(1, jobs.get_size()):
+        infocounter += 1
+        if infocounter > info_unit:
+            print(f"{pack_idx} out of {jobs.get_size()} already packed for a makespan of {makespan}")
+            infocounter = 0
         priority = jobs.get_idx(jobs.placement_to_idx(pack_idx))
         if priority is None:
             continue
@@ -136,7 +142,12 @@ input = compressed_input()
 jobsizes = [104976, 52488, 17496, 5832, 2916, 972, 324, 162, 54, 18, 9, 3, 1]
 jobcounts = [1, 1, 4, 12, 18, 72, 216, 324, 1296, 3888, 5832, 23328, 69984]
 for size, idx in zip(jobsizes, jobcounts):
-    input.add_job(size, idx)
+    input.add_job(size * jobsizes[0], idx)
+    if size != jobsizes[0]:
+        input.add_job(size, idx * jobsizes[0])
+
+for key, val in input.jobsizes.items():
+    print(f"{key} priority: {val} jobs")
 
 bintree_compressed(input)
 

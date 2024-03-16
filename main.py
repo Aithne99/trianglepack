@@ -138,6 +138,39 @@ def greedy_wiggle(jobs: List[job]):
         i += 1
 
 
+def placement_to_idx(place: int):
+    if not place:
+        return 0
+    treeheight = math.ceil(math.log(place + 1, 2))
+    size = int(math.pow(2, treeheight))
+    numlen = math.log(size, 2) + 1
+
+    rowidx_searcher = 2
+    rownum = 1
+
+    while place % rowidx_searcher == 0:
+        rowidx_searcher *= 2
+        rownum += 1
+
+    row_idx = treeheight - rownum
+    inrow_idx = place // rowidx_searcher
+    begin_idx = size // rowidx_searcher
+    idx = begin_idx + inrow_idx
+    placement = size / 2
+    cap = math.ceil(math.log(idx + 1, 2)) + 1
+    for logidx in range(2, cap):
+        sign = idx & (1 << cap - 1 - logidx) and 1 or -1
+        placement += sign * size / math.pow(2, logidx)
+        placement = int(placement)
+
+    print(placement)
+    print(place)
+
+    assert(placement == place)
+
+    pass
+
+
 def if_it_fits_i_sits(jobs: List[job]):
     i = 1
     # key=lambda j: j.gap + (j.child and j.child.wiggle or 0)
@@ -173,12 +206,15 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = generate_input("pow3", 3)
+    #jobsizes = generate_input("pow3", 2)
     #jobsizes = [324,162,54,54,54,54,18,18,18,18,18,18,18,18,18,18,18,18,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    #jobsizes = [324,89.99,89.99,54,54,54,18,18,18,18,18,18,18,18,18,18,18,18,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    jobsizes = [72,36,18,18,6,6,6,6,6,6,6,6,3,3,3,3,3,3,3,3,3,3,3,3]
     print(len(jobsizes))
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
     joblist2 = [job(i) for i in jobsizes]
+    print(len(jobsizes))
     greedy(joblist)
     for j in joblist:
         print(j.priority, j.start)
@@ -190,6 +226,18 @@ if __name__ == '__main__':
     #    print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
     print(f"bintree makespan {worst.start + worst.priority}")
+    prev = joblist[0].priority
+    counter = 0
+    for j in joblist:
+        if j.priority != prev:
+            print(f"job size {prev} count {counter}")
+            counter = 0
+        counter = counter + 1
+        prev = j.priority
+    print(f"job size {prev} count {counter}")
+
+    for i in range(0, 39):
+        placement_to_idx(i)
     if check_binary_tree(jobsizes):
         print("Greedy is optimal")
     else:

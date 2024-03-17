@@ -1,13 +1,12 @@
 import math
 from queue import PriorityQueue
 
-import numpy as np
-
 
 class compressed_input:
     def __init__(self):
         self.jobsizes = dict()
         self.cachesize = 0
+        self.cacherealsize = 0
         self.cacheheight = 0
         self.dirty = False
 
@@ -18,7 +17,7 @@ class compressed_input:
             self.jobsizes[size] = count
         self.dirty = True
     def get_idx(self, idx: int):
-        if idx > self.get_size():
+        if idx > self.get_real_size():
             return None
         sorted_keys = sorted(self.jobsizes.keys(), reverse=True)
         itr_idx = 0
@@ -34,8 +33,14 @@ class compressed_input:
         if self.dirty:
             self.reinit_sizes()
         return self.cacheheight
+
+    def get_real_size(self):
+        if self.dirty:
+            self.reinit_sizes()
+        return self.cacherealsize
     def reinit_sizes(self):
-        self.cacheheight = math.ceil(math.log(sum(self.jobsizes.values()), 2))
+        self.cacherealsize = sum(self.jobsizes.values())
+        self.cacheheight = math.ceil(math.log(self.cacherealsize, 2))
         self.cachesize = int(math.pow(2, self.cacheheight))
         self.dirty = False
     def placement_to_idx(self, place: int):

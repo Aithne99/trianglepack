@@ -3,7 +3,6 @@ from operator import attrgetter
 from typing import List
 import cplex
 from queue import PriorityQueue
-from inputgen import generate_input
 
 
 class job:
@@ -21,30 +20,6 @@ def check_binary_tree(sizes: List[int]):
         if s < sizes[math.ceil(i/2) - 1] / 2:
             return False
     return True
-
-
-def greedy_base(maxjob: job, curjob: job, jobs: List[job]):
-    curjob.start = maxjob.start + curjob.priority
-    if 2 * curjob.priority > maxjob.gap:
-        deltatime = 2 * curjob.priority - maxjob.gap
-        if maxjob.child and maxjob.child.wiggle:
-            if deltatime >= maxjob.child.wiggle:
-                maxjob.child.start += maxjob.child.wiggle
-                deltatime -= maxjob.child.wiggle
-                maxjob.child.wiggle = 0
-            else:
-                maxjob.child.start += deltatime
-                maxjob.child.wiggle -= deltatime
-                deltatime = 0
-        for jitr in jobs:
-            if jitr.start >= curjob.start and jitr != curjob:
-                jitr.start += deltatime
-    potentialgap = maxjob.gap - curjob.gap
-    if potentialgap > curjob.gap:
-        curjob.wiggle = potentialgap - curjob.gap
-        curjob.gap = potentialgap
-    maxjob.gap = curjob.priority
-    maxjob.child = curjob
 
 
 def greedy(jobs: List[job]):
@@ -129,28 +104,6 @@ def bintree(jobs: List[job]):
             continue
         print(j.priority, j.start)
 
-
-def greedy_wiggle(jobs: List[job]):
-    i = 1
-    while i < len(jobs):
-        maxjob = max(jobs[0:i], key=attrgetter('gap'), default=jobs[0])
-        greedy_base(maxjob, jobs[i], jobs)
-        i += 1
-
-
-def if_it_fits_i_sits(jobs: List[job]):
-    i = 1
-    # key=lambda j: j.gap + (j.child and j.child.wiggle or 0)
-    while i < len(jobs):
-        fits = [j for j in jobs[0:i] if j.gap + (j.child and j.child.wiggle or 0) >= 2 * jobs[i].priority]
-        if fits:
-            maxjob = min(fits, key=attrgetter('gap'))
-        else:
-            maxjob = max(jobs[0:i], key=attrgetter('gap'), default=jobs[0])
-        greedy_base(maxjob, jobs[i], jobs)
-        i += 1
-
-
 def build_cplex_model(jobs: List[job]):
     #ezt kisebbre nem tudom allitani mert infeas lesz...
     N = jobs[0].priority * len(jobs)
@@ -173,10 +126,7 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    #jobsizes = generate_input("pow3", 2)
-    #jobsizes = [324,162,54,54,54,54,18,18,18,18,18,18,18,18,18,18,18,18,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    #jobsizes = [324,89.99,89.99,54,54,54,18,18,18,18,18,18,18,18,18,18,18,18,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,4.99,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    jobsizes = [72,36,18,18,6,6,6,6,6,6,6,6,3,3,3,3,3,3,3,3,3,3,3,3]
+    jobsizes = [6, 3, 1, 1, 1, 1]
     print(len(jobsizes))
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
@@ -193,6 +143,7 @@ if __name__ == '__main__':
     #    print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
     print(f"bintree makespan {worst.start + worst.priority}")
+    print((worst.start + worst.priority) / (k * 6))
     prev = joblist[0].priority
     counter = 0
     for j in joblist:
@@ -203,8 +154,6 @@ if __name__ == '__main__':
         prev = j.priority
     print(f"job size {prev} count {counter}")
 
-    for i in range(0, 39):
-        placement_to_idx(i)
     if check_binary_tree(jobsizes):
         print("Greedy is optimal")
     else:

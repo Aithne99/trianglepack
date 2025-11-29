@@ -3,6 +3,8 @@
 #include <cmath>
 #include <map>
 #include <numeric>
+#include <algorithm>
+#include <chrono>
 
 typedef unsigned long long jobType;
 
@@ -130,7 +132,7 @@ void binTreeCompressed(CompressedInput& jobs) {
     startTimes.push({ 0, priority, 1, 0 });
     startTimes.push({ priority, priority, 0, 0 });
     // for the 11 billion job list
-    jobType infoUnit = jobs.getSize() / 10000;
+    jobType infoUnit = jobs.getSize() / 1000;
     jobType infoCounter = 0;
     jobType makespan = priority;
     jobType start = 0;
@@ -221,6 +223,7 @@ void binTreeCompressed(CompressedInput& jobs) {
 
 int main() {
     CompressedInput input;
+    // We upscale the manageably sized input programmatically
     std::vector<jobType> jobSizes = { 104976, 52488, 17496, 5832, 2916, 972, 324, 162, 54, 18, 9, 3, 1 };
     std::vector<jobType> jobCounts = { 1, 1, 4, 12, 18, 72, 216, 324, 1296, 3888, 5832, 23328, 69984 };
     for (size_t i = 0; i < jobSizes.size(); ++i) {
@@ -230,11 +233,15 @@ int main() {
         }
     }
 
-    for (auto const& [key, val] : input.jobSizes) {
-        std::cout << key << " priority: " << val << " jobs" << std::endl;
-    }
+    auto alg_start = std::chrono::high_resolution_clock::now();
 
     binTreeCompressed(input);
+
+    auto alg_end = std::chrono::high_resolution_clock::now();
+
+    std::cout << "the algorithm took "
+        << std::chrono::duration_cast<std::chrono::seconds>(alg_end - alg_start).count()
+        << " seconds\n";
 
     return 0;
 }

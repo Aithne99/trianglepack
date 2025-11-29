@@ -126,7 +126,7 @@ def build_cplex_model(jobs: List[job]):
 
 
 if __name__ == '__main__':
-    jobsizes = [6, 3, 1, 1, 1, 1]
+    jobsizes = [18, 4.999, 4.999, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     print(len(jobsizes))
     jobsizes.sort(reverse=True)
     joblist = [job(i) for i in jobsizes]
@@ -143,7 +143,6 @@ if __name__ == '__main__':
     #    print(j.priority, j.start)
     worst = max(joblist2, key=lambda j: j.start + j.priority)
     print(f"bintree makespan {worst.start + worst.priority}")
-    print((worst.start + worst.priority) / (k * 6))
     prev = joblist[0].priority
     counter = 0
     for j in joblist:
@@ -157,7 +156,7 @@ if __name__ == '__main__':
     if check_binary_tree(jobsizes):
         print("Greedy is optimal")
     else:
-        #build_cplex_model(joblist)
+        build_cplex_model(joblist)
         pass
 
 

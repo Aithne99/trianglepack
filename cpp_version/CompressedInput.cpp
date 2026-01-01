@@ -206,8 +206,9 @@ void binTreeCompressed(CompressedInput& jobs)
         {
             auto testGap = startTimes_.top();
             startTimes_.pop();
+            auto selfGap = std::make_shared<TriangleGap>(TriangleGap(std::numeric_limits<jobPrecision>::max(), priority, std::numeric_limits<jobPrecision>::max()));
             // we'd fit under this ceiling
-            if (priority < testGap->gapHeight)
+            if (testGap->insert(priority))
             {
                 // sanity check, if this happens, we have messed up the entire algorithm, depending on language, this either deadlocks or crashes or some other undesirable behavior
                 if (startTimes_.empty())
@@ -217,7 +218,8 @@ void binTreeCompressed(CompressedInput& jobs)
                 auto nextGap = startTimes_.top();
                 startTimes_.pop();
                 start = testGap->getStartTimeFor(priority);
-                auto selfGap = std::make_shared<TriangleGap>(TriangleGap(start, priority, start));
+                selfGap->startTime = start;
+                selfGap->ceilingStart = start;
                 // here we drop ALL the ceilings whose trapezoids we are cutting into, and this might even include pushing the infinite gap further to the right
                 // technically, trapezoid gaps can be degenerate (0-width), for example with inputs like 8, 4, 2, 2, 1, 1, 1, 1, where multiple rightmost points are above each other.
                 // we do handle that case, though, and all of those ceilings are popped
@@ -245,12 +247,12 @@ void binTreeCompressed(CompressedInput& jobs)
                 {
                     ceilHeight = testGap->gapHeight;
                     ceilStart = testGap->ceilingStart;
-                    //std::cout << "Found gaps: ";
+                    std::cout << "Found gaps: ";
+                    startTimes_.push(selfGap);
                     auto newGap = std::make_shared<TrapezoidGap>(TrapezoidGap(start + priority, ceilHeight, ceilStart));
                     startTimes_.push(newGap);
-                    //std::cout << *newGap << *nextGap << *selfGap;
+                    std::cout << *newGap << *nextGap << *selfGap;
                     startTimes_.push(nextGap);
-                    startTimes_.push(selfGap);
                     makespan = std::max(makespan, start + priority);
                     break;
                 }
@@ -258,12 +260,13 @@ void binTreeCompressed(CompressedInput& jobs)
             // this is for when we overhang ALL the previous ceilings, the most trivial example of this is when the input consists of uniform priority jobs.
             if (startTimes_.empty())
             {
-                start = testGap->startTime;
+                start = selfGap->startTime < std::numeric_limits<jobPrecision>::max() ? selfGap->startTime : testGap->startTime;
+                selfGap->startTime = start;
+                selfGap->ceilingStart = start;
                 auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
-                auto selfGap = std::make_shared<TriangleGap>(TriangleGap(start, priority, start));
-                startTimes_.push(addGap);
                 startTimes_.push(selfGap);
-                //std::cout << "Reinit: " << *selfGap << *addGap;
+                startTimes_.push(addGap);
+                std::cout << "Reinit: " << *selfGap << *addGap;
                 makespan = std::max(makespan, start + priority);
                 break;
             }

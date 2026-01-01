@@ -22,12 +22,6 @@ TriangleGap::operator std::string() const
     return ret.str();
 }
 
-
-jobPrecision TriangleGap::insert(Job job)
-{
-    return jobPrecision();
-}
-
 jobPrecision InfiniteGap::getStartTimeFor(jobPrecision jobPriority)
 {
     jobPrecision start = startTime;
@@ -43,9 +37,9 @@ InfiniteGap::operator std::string() const
 }
 
 
-jobPrecision InfiniteGap::insert(Job job)
+bool InfiniteGap::insert(Job job)
 {
-    return jobPrecision();
+    return true;
 }
 
 jobPrecision TrapezoidGap::getStartTimeFor(jobPrecision jobPriority)
@@ -59,11 +53,6 @@ TrapezoidGap::operator std::string() const
     std::stringstream ret;
     ret << "Trapezoid " << Gap::operator std::string();
     return ret.str();
-}
-
-jobPrecision TrapezoidGap::insert(Job job)
-{
-    return jobPrecision();
 }
 
 jobPrecision iterSquareBlowup(jobPrecision base, jobPrecision count)

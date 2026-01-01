@@ -229,19 +229,23 @@ namespace old {
     }
 }
 
-int mainasd() {
+int maina() {
     old::CompressedInput input;
     // We upscale the manageably sized input programmatically
     //std::vector<jobType> jobSizes = { 104976, 52488, 17496, 5832, 2916, 972, 324, 162, 54, 18, 9, 3, 1 };
     //std::vector<jobType> jobCounts = { 1, 1, 4, 12, 18, 72, 216, 324, 1296, 3888, 5832, 23328, 69984 };
     std::vector<jobType> jobSizes = { 6, 3, 1 };
     std::vector<jobType> jobCounts = { 1, 1, 4 };
-    for (size_t i = 0; i < jobSizes.size(); ++i) {
-        input.addJob(jobSizes[i] * jobSizes[0], jobCounts[i]);
-        if (jobSizes[i] != jobSizes[0]) {
-            input.addJob(jobSizes[i], jobCounts[i] * jobSizes[0]);
-        }
-    }
+    //for (size_t i = 0; i < jobSizes.size(); ++i) {
+    //    input.addJob(jobSizes[i] * jobSizes[0], jobCounts[i]);
+    //    if (jobSizes[i] != jobSizes[0]) {
+    //        input.addJob(jobSizes[i], jobCounts[i] * jobSizes[0]);
+    //    }
+    //}
+
+    std::map<jobType, jobType> initialGreedy = { {96, 1}, {36, 1}, {24, 2}, {5, 12}, {3, 16} };
+    for (auto& j : initialGreedy)
+        input.addJob(j.first, j.second);
 
     auto alg_start = std::chrono::high_resolution_clock::now();
 

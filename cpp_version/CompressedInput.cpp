@@ -8,19 +8,45 @@
 #include <iostream>
 #include <assert.h>
 
-CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount)
+CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg)
 {
     assert(initial.size() > 1);
-    auto maxElement = initial.rbegin();
-    ++maxElement;
-    jobPrecision scaleFactor = maxElement->first * 2; // for Greedy, we have to use a p_2 based scaling, as p_1 != 2 * p_2
-    --maxElement;
+
+    // we should be able to just take the provided map as the set of jobs
+    if (!iterCount)
+    {
+        for (auto& mapItr : initial)
+        {
+            addJob(mapItr.first, mapItr.second);
+        }
+        return;
+    }
+    jobPrecision scaleFactor = 1;
+    jobPrecision maxJobSize = initial.rbegin()->first;
+    switch (alg)
+    {
+    case Antagonist::BINTREE_ANTAGONIST:
+    {
+        auto maxElement = initial.rbegin();
+        ++maxElement;
+        scaleFactor = maxElement->first * 2; // for combined antagonist inputs, we have to use a p_2 based scaling, as p_1 != 2 * p_2 for those
+        --maxElement;
+        break;
+    }
+    case Antagonist::GREEDY_ANTAGONIST:   
+    {
+        auto minElement = initial.begin();
+        scaleFactor = minElement->second * 2;
+    }
+    default:
+        break;
+    }
     for (jobPrecision e = 1; e <= iterCount; ++e)
     {
         for (auto& mapItr : initial)
         {
             addJob(mapItr.first * iterSquareBlowup(scaleFactor, e), mapItr.second * iterSquareBlowup(scaleFactor, iterCount - e));
-            if (mapItr.first != maxElement->first)
+            if (mapItr.first != maxJobSize)
             {
                 addJob(mapItr.first * iterSquareBlowup(scaleFactor, iterCount - e), mapItr.second * iterSquareBlowup(scaleFactor, e));
             }

@@ -1,6 +1,13 @@
 #pragma once
 #include "JobDef.h"
 #include <map>
+
+enum class Antagonist
+{
+    BINTREE_ANTAGONIST,
+    GREEDY_ANTAGONIST
+};
+
 class CompressedInput {
 public:
     std::map<jobPrecision, jobPrecision> jobSizes;
@@ -13,7 +20,7 @@ private:
 public:
     CompressedInput() {}
 
-    CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount);
+    CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg);
 
     void addJob(jobPrecision size, jobPrecision count);
 

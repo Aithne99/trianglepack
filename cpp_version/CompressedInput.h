@@ -5,13 +5,15 @@ class CompressedInput {
 public:
     std::map<jobPrecision, jobPrecision> jobSizes;
 private:
-    jobPrecision cacheSize;
-    jobPrecision cacheRealSize;
-    jobPrecision cacheHeight;
-    bool dirty;
+    jobPrecision cacheSize = 0;
+    jobPrecision cacheRealSize = 0;
+    jobPrecision cacheHeight = 0;
+    bool dirty = false;
 
 public:
-    CompressedInput() : cacheSize(0), cacheHeight(0), dirty(false), cacheRealSize(0) {}
+    CompressedInput() {}
+
+    CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount);
 
     void addJob(jobPrecision size, jobPrecision count);
 

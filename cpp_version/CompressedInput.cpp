@@ -6,6 +6,27 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <assert.h>
+
+CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount)
+{
+    assert(initial.size() > 1);
+    auto maxElement = initial.rbegin();
+    ++maxElement;
+    jobPrecision scaleFactor = maxElement->first * 2; // for Greedy, we have to use a p_2 based scaling, as p_1 != 2 * p_2
+    --maxElement;
+    for (jobPrecision e = 1; e <= iterCount; ++e)
+    {
+        for (auto& mapItr : initial)
+        {
+            addJob(mapItr.first * iterSquareBlowup(scaleFactor, e), mapItr.second * iterSquareBlowup(scaleFactor, iterCount - e));
+            if (mapItr.first != maxElement->first)
+            {
+                addJob(mapItr.first * iterSquareBlowup(scaleFactor, iterCount - e), mapItr.second * iterSquareBlowup(scaleFactor, e));
+            }
+        }
+    }
+}
 
 void CompressedInput::addJob(jobPrecision size, jobPrecision count)
 {

@@ -50,3 +50,5 @@ struct InfiniteGap : public Gap
     jobPrecision insert(Job job) override;
     virtual operator std::string() const override;
 };
+
+jobPrecision iterSquareBlowup(jobPrecision base, jobPrecision count);

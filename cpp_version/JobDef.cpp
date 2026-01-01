@@ -65,3 +65,15 @@ jobPrecision TrapezoidGap::insert(Job job)
 {
     return jobPrecision();
 }
+
+jobPrecision iterSquareBlowup(jobPrecision base, jobPrecision count)
+{
+    jobPrecision result = 1;
+    while (count > 0)
+    {
+        result *= base;
+        base *= base;
+        --count;
+    }
+    return result;
+}

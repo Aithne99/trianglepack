@@ -4,9 +4,9 @@ typedef unsigned long long jobPrecision;
 
 struct Job
 {
-    jobPrecision priority;
+    jobPrecision priority = 0;
     jobPrecision startTime = 0;
-    Job(jobPrecision p) : priority(p) {}
+    Job(jobPrecision p = 0) : priority(p) {}
 };
 
 // gap start time, gap height, "collision mode", ceiling start time

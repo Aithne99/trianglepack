@@ -6,22 +6,55 @@
 int main()
 {
     // We upscale the manageably sized input programmatically
-    std::map<jobPrecision, jobPrecision> initialBintree = { {18, 1}, {9, 1}, {3, 4}, {1, 12} };
-    std::map<jobPrecision, jobPrecision> initialGreedy = { {96, 1}, {36, 1}, {24, 2}, {5, 12}, {3, 16} };
-    CompressedInput tiny(initialGreedy, 0, Antagonist::GREEDY_ANTAGONIST);
-    CompressedInput small(initialGreedy, 1, Antagonist::GREEDY_ANTAGONIST);
-    CompressedInput big(initialGreedy, 2, Antagonist::GREEDY_ANTAGONIST);
-    CompressedInput huge(initialGreedy, 3, Antagonist::GREEDY_ANTAGONIST);
+    std::map<jobPrecision, jobPrecision> smallBintree = { {6, 1}, {3, 1}, {1, 4}};
+    std::map<jobPrecision, jobPrecision> initialBintree = { {18, 1}, {9, 1}, {3, 4}, {1, 12} }; // 18 jobs
+    std::map<jobPrecision, jobPrecision> initialGreedy = { {48, 1}, {18, 1}, {12, 2}, {5, 4}, {3, 8} }; // 16 jobs
 
-    auto alg_start = std::chrono::high_resolution_clock::now();
+    std::vector<CompressedInput> inputs =
+    {
+    CompressedInput(initialGreedy, 1, Antagonist::GREEDY_ANTAGONIST),
+    CompressedInput(initialBintree, 1, Antagonist::BINTREE_ANTAGONIST),
+    CompressedInput(initialGreedy, 2, Antagonist::GREEDY_ANTAGONIST),
+    CompressedInput(initialBintree, 2, Antagonist::BINTREE_ANTAGONIST),
+    //CompressedInput(initialGreedy, 3, Antagonist::GREEDY_ANTAGONIST),
+    //CompressedInput(initialBintree, 3, Antagonist::BINTREE_ANTAGONIST),
+    };
 
-    binTreeCompressed(tiny);
+    for (int i = 0; i < inputs.size(); ++i)
+    {
+        std::cout << "--------------------------------------------------------\n\n";
+        auto alg_start = std::chrono::high_resolution_clock::now();
+        bool checkFeas = inputs[i].tryToStoreTimes(true);
 
-    auto alg_end = std::chrono::high_resolution_clock::now();
+        jobPrecision makespan = binTreeCompressed(inputs[i]);
 
-    std::cout << "the algorithm took "
-        << std::chrono::duration_cast<std::chrono::seconds>(alg_end - alg_start).count()
-        << " seconds\n";
+        auto alg_end = std::chrono::high_resolution_clock::now();
+        std::string inputtype(i % 2 ? " (anti-Bintree)" : " (anti-Greedy)");
+
+        std::cout << "On input #" << i + 1 << inputtype << " the algorithm took "
+            << std::chrono::duration_cast<std::chrono::seconds>(alg_end - alg_start).count()
+            << " seconds\n";
+
+        if (checkFeas)
+        {
+            auto feas_start = std::chrono::high_resolution_clock::now();
+
+            assert(inputs[i].checkFeasibility());
+
+            auto feas_end = std::chrono::high_resolution_clock::now();
+
+            std::cout << "On input #" << i + 1 << inputtype << " feasibility checking took "
+                << std::chrono::duration_cast<std::chrono::seconds>(feas_start - feas_end).count()
+                << " seconds\n";
+        }
+        else
+        {
+            std::cout << "On input #" << i + 1 << inputtype << " feasibility checking is not tractable (allocated array would exceed one gigabyte of memory), skipped";
+        }
+
+        double opt = inputs[i].jobSizes.rbegin()->first;
+        std::cout << "Approximation ratio: " << (double)makespan / opt << "\n";
+    }
 
     return 0;
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "JobDef.h"
+#include <vector>
 #include <map>
+#include <assert.h>
 
 enum class Antagonist
 {
@@ -16,6 +18,8 @@ private:
     jobPrecision cacheRealSize = 0;
     jobPrecision cacheHeight = 0;
     bool dirty = false;
+    bool storeTimes = false;
+    std::vector<Job> startTimes;
 
 public:
     CompressedInput() {}
@@ -35,6 +39,12 @@ public:
     void reinitializeSizes();
 
     jobPrecision placementToIdx(jobPrecision place);
+
+    void setJobStartTime(jobPrecision idx, jobPrecision start);
+
+    bool tryToStoreTimes(bool enable);
+
+    bool checkFeasibility();
 };
 
-void binTreeCompressed(CompressedInput& jobs);
+jobPrecision binTreeCompressed(CompressedInput& jobs);

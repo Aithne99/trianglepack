@@ -6,7 +6,6 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
-#include <assert.h>
 
 CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg)
 {
@@ -126,6 +125,11 @@ void CompressedInput::reinitializeSizes()
     cacheHeight = static_cast<jobPrecision>(std::ceil(std::log2(tempvar)));
     cacheSize = static_cast<jobPrecision>(std::pow(2, cacheHeight));
     dirty = false;
+    if (storeTimes)
+    {
+        startTimes.clear();
+        startTimes.resize(cacheRealSize);
+    }
 }
 
 // indexing on a full binary tree is easier, and we just return empty jobs if needed.
@@ -163,6 +167,30 @@ jobPrecision CompressedInput::placementToIdx(jobPrecision place)
     return idx;
 }
 
+void CompressedInput::setJobStartTime(jobPrecision idx, jobPrecision start)
+{
+    if (!storeTimes)
+        return;
+    jobPrecision jobIdx = placementToIdx(idx);
+    jobPrecision priority = getIdx(jobIdx);
+    startTimes[jobIdx].priority = priority;
+    startTimes[jobIdx].startTime = start;
+}
+
+bool CompressedInput::tryToStoreTimes(bool enable)
+{
+    if (getRealSize() > 1024 * 1024 * 1024 / sizeof(Job))
+        storeTimes = false;
+    storeTimes = enable;
+    if (storeTimes)
+    {
+        startTimes.clear();
+        startTimes.resize(cacheRealSize);
+    }
+    return storeTimes;
+
+}
+
 struct CompareJobGreater
 {
     bool operator()(const std::shared_ptr<Gap>& t1, std::shared_ptr<Gap>& t2)
@@ -171,7 +199,27 @@ struct CompareJobGreater
     }
 };
 
-void binTreeCompressed(CompressedInput& jobs)
+bool CompressedInput::checkFeasibility()
+{
+    if (!storeTimes || dirty)
+        return true;
+
+    bool ret = true;
+    for (int i = 0; i < getRealSize(); ++i)
+    {
+        for (int j = i + 1; j < getRealSize(); ++j)
+        {
+            if (abs((long long)startTimes[i].startTime - (long long)startTimes[j].startTime) < std::min(startTimes[i].priority, startTimes[j].priority))
+            {
+                std::cout << "Failure between jobs " << i << " and " << j;
+                ret = false;
+            }
+        }
+    }
+    return ret;
+}
+
+jobPrecision binTreeCompressed(CompressedInput& jobs)
 {
     // minheap priority queue, in cpp the default is maxheap
     std::priority_queue<std::shared_ptr<Gap>, std::vector<std::shared_ptr<Gap>>, CompareJobGreater> startTimes_;
@@ -183,8 +231,12 @@ void binTreeCompressed(CompressedInput& jobs)
     // "ceilings" are relevant for trapezoid gaps only, but since trapezoid gaps can be created directly under triangle gaps AND by slicing off a trapezoid gap, they need to be able to request the big parent triangle's starting time point from any situation
     startTimes_.push(std::make_shared<TriangleGap>(TriangleGap(0, priority, 0)));
     startTimes_.push(std::make_shared<InfiniteGap>(InfiniteGap(priority, priority, 0)));
+    jobs.setJobStartTime(0, 0);
     // for the 11 billion job list
     jobPrecision infoUnit = jobs.getSize() / 1000;
+    if (log10(jobs.getSize()) < 8)
+        infoUnit = jobs.getSize() / log10(jobs.getSize());
+    std::cout << "Info unit: " << infoUnit << "\n";
     jobPrecision infoCounter = 0;
     jobPrecision makespan = priority;
     jobPrecision start = 0;
@@ -247,11 +299,11 @@ void binTreeCompressed(CompressedInput& jobs)
                 {
                     ceilHeight = testGap->gapHeight;
                     ceilStart = testGap->ceilingStart;
-                    std::cout << "Found gaps: ";
+                    //std::cout << "Found gaps: ";
                     startTimes_.push(selfGap);
                     auto newGap = std::make_shared<TrapezoidGap>(TrapezoidGap(start + priority, ceilHeight, ceilStart));
                     startTimes_.push(newGap);
-                    std::cout << *newGap << *nextGap << *selfGap;
+                    //std::cout << *newGap << *nextGap << *selfGap;
                     startTimes_.push(nextGap);
                     makespan = std::max(makespan, start + priority);
                     break;
@@ -266,12 +318,14 @@ void binTreeCompressed(CompressedInput& jobs)
                 auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
                 startTimes_.push(selfGap);
                 startTimes_.push(addGap);
-                std::cout << "Reinit: " << *selfGap << *addGap;
+                //std::cout << "Reinit: " << *selfGap << *addGap;
                 makespan = std::max(makespan, start + priority);
                 break;
             }
         }
         // this is where you assign the start value to a job object if you have an actual job object
+        jobs.setJobStartTime(packIdx, start);
     }
     std::cout << makespan << std::endl;
+    return makespan;
 }

@@ -14,10 +14,10 @@ int main()
 
     std::vector<CompressedInput> inputs =
     {
-    //CompressedInput(initialGreedy, 1, Antagonist::GREEDY_ANTAGONIST),
-    //CompressedInput(initialBintree, 1, Antagonist::BINTREE_ANTAGONIST),
-    //CompressedInput(initialGreedy, 2, Antagonist::GREEDY_ANTAGONIST),
-    //CompressedInput(initialBintree, 2, Antagonist::BINTREE_ANTAGONIST),
+    CompressedInput(initialGreedy, 1, Antagonist::GREEDY_ANTAGONIST),
+    CompressedInput(initialBintree, 1, Antagonist::BINTREE_ANTAGONIST),
+    CompressedInput(initialGreedy, 2, Antagonist::GREEDY_ANTAGONIST),
+    CompressedInput(initialBintree, 2, Antagonist::BINTREE_ANTAGONIST),
     //CompressedInput(initialMixed, 2, Antagonist::GREEDY_ANTAGONIST),
     //CompressedInput(initialMixed, 2, Antagonist::BINTREE_ANTAGONIST),
     CompressedInput(initialGreedy, 3, Antagonist::GREEDY_ANTAGONIST),

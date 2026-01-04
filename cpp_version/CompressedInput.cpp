@@ -320,7 +320,6 @@ jobPrecision CompressedInput::binTreeCompressed()
                     ceilHeight = testGap->gapHeight;
                     ceilStart = testGap->ceilingStart;
                     //std::cout << "Found gaps: ";
-                    startTimes_.push(selfGap);
                     auto newGap = std::make_shared<TrapezoidGap>(TrapezoidGap(start + priority, ceilHeight, ceilStart));
                     startTimes_.push(newGap);
                     //std::cout << *newGap << *nextGap << *selfGap;

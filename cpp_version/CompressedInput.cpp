@@ -212,19 +212,30 @@ struct CompareJobGreater
 bool CompressedInput::checkFeasibility()
 {
     if (!storeTimes || dirty)
+    {
         return true;
-
+    }
     bool ret = true;
     for (int i = 0; i < getRealSize(); ++i)
     {
-        for (int j = i + 1; j < getRealSize(); ++j)
+        bool tight = !i;
+        for (int j = 0; j < getRealSize(); ++j)
         {
-            if (abs((long long)startTimes[i].startTime - (long long)startTimes[j].startTime) < std::min(startTimes[i].priority, startTimes[j].priority))
+            if (j > i)
             {
-                std::cout << "Failure between jobs " << i << " and " << j;
-                ret = false;
+                if (abs((long long)startTimes[i].startTime - (long long)startTimes[j].startTime) < std::min(startTimes[i].priority, startTimes[j].priority))
+                {
+                    std::cout << "Failure between jobs " << i << " and " << j << "\n";
+                    ret = false;
+                }
+            }
+            if (!tight && startTimes[j].startTime < (long long)startTimes[i].startTime)
+            {
+                tight = abs((long long)startTimes[i].startTime - (long long)startTimes[j].startTime) == std::min(startTimes[i].priority, startTimes[j].priority);
             }
         }
+        if (!tight)
+            std::cout << "Failure at job" << i << "\n";
     }
     return ret;
 }
@@ -291,7 +302,7 @@ jobPrecision CompressedInput::binTreeCompressed()
                 // This is what is being cleared out here, and p_l can theoretically invalidate out any number of gaps created by earlier jobs
                 jobPrecision ceilHeight = 0;
                 jobPrecision ceilStart = 0;
-                while (nextGap->startTime <= start + priority)
+                while (nextGap->startTime <= start + priority && !startTimes_.empty())
                 {
                     testGap = nextGap;
                     nextGap = startTimes_.top();
@@ -301,6 +312,7 @@ jobPrecision CompressedInput::binTreeCompressed()
                 {
                     auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
                     startTimes_.push(addGap);
+                    break;
                 }
                 // we are not cutting into the next gap, so it remains a valid gap, and we put it back along with our own
                 else
@@ -318,6 +330,7 @@ jobPrecision CompressedInput::binTreeCompressed()
                 }
             }
             startTimes_.push(selfGap);
+            break;
         }
         // this is where you assign the start value to a job object if you have an actual job object
         setJobStartTime(packIdx, start);
@@ -329,6 +342,7 @@ jobPrecision CompressedInput::binTreeCompressed()
 jobPrecision CompressedInput::greedyCompressed()
 {
     jobPrecision makespan = 0;
+    std::cout << getSize();
     startTimes.resize(getSize());
     gapLengths.resize(getSize());
     jobPrecision i = 0;
@@ -340,6 +354,13 @@ jobPrecision CompressedInput::greedyCompressed()
             gapLengths[i++] = jobsize->first;
         }
     }
+
+    jobPrecision infoUnit = getSize() / 1000;
+    if (log10(getSize()) < 8)
+        infoUnit = getSize() / log10(getSize());
+    std::cout << "Info unit: " << infoUnit << "\n";
+
+    jobPrecision infoCounter = 0;
 
     for (i = 1; i < getSize(); ++i)
     {
@@ -356,6 +377,13 @@ jobPrecision CompressedInput::greedyCompressed()
         }
         setGap(i, std::max(gapLengths[i], gapLengths[maxjob] - gapLengths[i]));
         setGap(maxjob, startTimes[i].priority);
+
+        infoCounter += 1;
+        if (infoCounter > infoUnit)
+        {
+            std::cout << i << " out of " << getSize() << " already packed for a makespan of " << makespan << std::endl;
+            infoCounter = 0;
+        }
     }
 
     for (i = 0; i < getSize(); ++i)

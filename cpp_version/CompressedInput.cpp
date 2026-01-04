@@ -189,8 +189,8 @@ void CompressedInput::setGap(jobPrecision idx, jobPrecision gap)
 
 bool CompressedInput::tryToStoreTimes(bool enable)
 {
-    if (getRealSize() > 1024 * 1024 * 1024 / sizeof(Job))
-        storeTimes = false;
+    if (getRealSize() > 1024 * 1024 * 1024)
+        enable = false;
     storeTimes = enable;
     if (storeTimes)
     {

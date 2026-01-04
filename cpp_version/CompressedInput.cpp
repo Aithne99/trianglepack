@@ -177,6 +177,16 @@ void CompressedInput::setJobStartTime(jobPrecision idx, jobPrecision start)
     startTimes[jobIdx].startTime = start;
 }
 
+void CompressedInput::setGreedyJobStartTime(jobPrecision idx, jobPrecision start)
+{
+    startTimes[idx].startTime = start;
+}
+
+void CompressedInput::setGap(jobPrecision idx, jobPrecision gap)
+{
+    gapLengths[idx] = gap;
+}
+
 bool CompressedInput::tryToStoreTimes(bool enable)
 {
     if (getRealSize() > 1024 * 1024 * 1024 / sizeof(Job))
@@ -219,37 +229,37 @@ bool CompressedInput::checkFeasibility()
     return ret;
 }
 
-jobPrecision binTreeCompressed(CompressedInput& jobs)
+jobPrecision CompressedInput::binTreeCompressed()
 {
     // minheap priority queue, in cpp the default is maxheap
     std::priority_queue<std::shared_ptr<Gap>, std::vector<std::shared_ptr<Gap>>, CompareJobGreater> startTimes_;
     // always schedule the first job at t=0
-    jobPrecision priority = jobs.getIdx(0);
+    jobPrecision priority = getIdx(0);
     // gap start time: here, we consider finite gaps to be right-angle triangles or trapezoids, or an infinite gap to be a quarter plane, this is the bottom left point's time coordinate
     // gap height: the rightmost vertical edge of the gap for triangles and trapezoids, and the left edge of the infinite gap (for infinite gaps, it is mostly irrelevant either way)
     // ceiling start time: the timestamp at which the currently investigated gap's ceiling began, because we can collide into that ceiling, not just the previous job
     // "ceilings" are relevant for trapezoid gaps only, but since trapezoid gaps can be created directly under triangle gaps AND by slicing off a trapezoid gap, they need to be able to request the big parent triangle's starting time point from any situation
     startTimes_.push(std::make_shared<TriangleGap>(TriangleGap(0, priority, 0)));
     startTimes_.push(std::make_shared<InfiniteGap>(InfiniteGap(priority, priority, 0)));
-    jobs.setJobStartTime(0, 0);
+    setJobStartTime(0, 0);
     // for the 11 billion job list
-    jobPrecision infoUnit = jobs.getSize() / 1000;
-    if (log10(jobs.getSize()) < 8)
-        infoUnit = jobs.getSize() / log10(jobs.getSize());
+    jobPrecision infoUnit = getSize() / 1000;
+    if (log10(getSize()) < 8)
+        infoUnit = getSize() / log10(getSize());
     std::cout << "Info unit: " << infoUnit << "\n";
     jobPrecision infoCounter = 0;
     jobPrecision makespan = priority;
     jobPrecision start = 0;
-    for (jobPrecision packIdx = 1; packIdx < jobs.getSize(); packIdx++)
+    for (jobPrecision packIdx = 1; packIdx < getSize(); packIdx++)
     {
         infoCounter += 1;
         if (infoCounter > infoUnit)
         {
-            std::cout << packIdx << " out of " << jobs.getSize() << " already packed for a makespan of " << makespan << std::endl;
+            std::cout << packIdx << " out of " << getSize() << " already packed for a makespan of " << makespan << std::endl;
             infoCounter = 0;
         }
         // can be replaced with job object if we're using a container for real jobs
-        priority = jobs.getIdx(jobs.placementToIdx(packIdx));
+        priority = getIdx(placementToIdx(packIdx));
         if (!priority)
         {
             continue;
@@ -258,20 +268,17 @@ jobPrecision binTreeCompressed(CompressedInput& jobs)
         {
             auto testGap = startTimes_.top();
             startTimes_.pop();
-            auto selfGap = std::make_shared<TriangleGap>(TriangleGap(std::numeric_limits<jobPrecision>::max(), priority, std::numeric_limits<jobPrecision>::max()));
             // we'd fit under this ceiling
-            if (testGap->insert(priority))
+            if (!testGap->insert(priority))
+                continue;
+
+            start = testGap->getStartTimeFor(priority);
+            auto selfGap = std::make_shared<TriangleGap>(TriangleGap(start, priority, start));
+            makespan = std::max(makespan, start + priority);
+            // we are doing infinite gap here
+            while (!startTimes_.empty())
             {
-                // sanity check, if this happens, we have messed up the entire algorithm, depending on language, this either deadlocks or crashes or some other undesirable behavior
-                if (startTimes_.empty())
-                {
-                    throw std::runtime_error("asd");
-                }
                 auto nextGap = startTimes_.top();
-                startTimes_.pop();
-                start = testGap->getStartTimeFor(priority);
-                selfGap->startTime = start;
-                selfGap->ceilingStart = start;
                 // here we drop ALL the ceilings whose trapezoids we are cutting into, and this might even include pushing the infinite gap further to the right
                 // technically, trapezoid gaps can be degenerate (0-width), for example with inputs like 8, 4, 2, 2, 1, 1, 1, 1, where multiple rightmost points are above each other.
                 // we do handle that case, though, and all of those ceilings are popped
@@ -286,16 +293,17 @@ jobPrecision binTreeCompressed(CompressedInput& jobs)
                 jobPrecision ceilStart = 0;
                 while (nextGap->startTime <= start + priority)
                 {
-                    if (startTimes_.empty())
-                    {
-                        break;
-                    }
                     testGap = nextGap;
                     nextGap = startTimes_.top();
                     startTimes_.pop();
                 }
+                if (startTimes_.empty())
+                {
+                    auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
+                    startTimes_.push(addGap);
+                }
                 // we are not cutting into the next gap, so it remains a valid gap, and we put it back along with our own
-                if (start + priority < nextGap->startTime)
+                else
                 {
                     ceilHeight = testGap->gapHeight;
                     ceilStart = testGap->ceilingStart;
@@ -309,23 +317,65 @@ jobPrecision binTreeCompressed(CompressedInput& jobs)
                     break;
                 }
             }
-            // this is for when we overhang ALL the previous ceilings, the most trivial example of this is when the input consists of uniform priority jobs.
-            if (startTimes_.empty())
-            {
-                start = selfGap->startTime < std::numeric_limits<jobPrecision>::max() ? selfGap->startTime : testGap->startTime;
-                selfGap->startTime = start;
-                selfGap->ceilingStart = start;
-                auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
-                startTimes_.push(selfGap);
-                startTimes_.push(addGap);
-                //std::cout << "Reinit: " << *selfGap << *addGap;
-                makespan = std::max(makespan, start + priority);
-                break;
-            }
+            startTimes_.push(selfGap);
         }
         // this is where you assign the start value to a job object if you have an actual job object
-        jobs.setJobStartTime(packIdx, start);
+        setJobStartTime(packIdx, start);
     }
     std::cout << makespan << std::endl;
     return makespan;
+}
+
+jobPrecision CompressedInput::greedyCompressed()
+{
+    jobPrecision makespan = 0;
+    startTimes.resize(getSize());
+    gapLengths.resize(getSize());
+    jobPrecision i = 0;
+    for (auto jobsize = jobSizes.rbegin(); jobsize != jobSizes.rend(); ++jobsize)
+    {
+        for (jobPrecision j = 0; j < jobsize->second; ++j)
+        {
+            startTimes[i].priority = jobsize->first;
+            gapLengths[i++] = jobsize->first;
+        }
+    }
+
+    for (i = 1; i < getSize(); ++i)
+    {
+        jobPrecision maxjob = greedyGapSelect(i);
+        setGreedyJobStartTime(i, startTimes[maxjob].startTime + startTimes[i].priority);
+        if (2 * startTimes[i].priority > gapLengths[maxjob])
+        {
+            jobPrecision delta = 2 * startTimes[i].priority - gapLengths[maxjob];
+            for (jobPrecision j = 1; j < i; ++j)
+            {
+                if (startTimes[j].startTime > startTimes[i].startTime)
+                    startTimes[j].startTime += delta;
+            }
+        }
+        setGap(i, std::max(gapLengths[i], gapLengths[maxjob] - gapLengths[i]));
+        setGap(maxjob, startTimes[i].priority);
+    }
+
+    for (i = 0; i < getSize(); ++i)
+    {
+        if (startTimes[i].length() > makespan)
+            makespan = startTimes[i].length();
+    }
+    std::cout << makespan << std::endl;
+    return makespan;
+}
+
+jobPrecision CompressedInput::greedyGapSelect(jobPrecision i)
+{
+    jobPrecision ret = 0;
+    for (jobPrecision j = 0; j < i; ++j)
+    {
+        if (gapLengths[j] > gapLengths[ret])
+        {
+            ret = j;
+        }
+    }
+    return ret;
 }

@@ -20,6 +20,7 @@ private:
     bool dirty = false;
     bool storeTimes = false;
     std::vector<Job> startTimes;
+    std::vector<jobPrecision> gapLengths;
 
 public:
     CompressedInput() {}
@@ -42,9 +43,16 @@ public:
 
     void setJobStartTime(jobPrecision idx, jobPrecision start);
 
+    void setGreedyJobStartTime(jobPrecision idx, jobPrecision start);
+    void setGap(jobPrecision idx, jobPrecision gap);
+
     bool tryToStoreTimes(bool enable);
 
     bool checkFeasibility();
-};
 
-jobPrecision binTreeCompressed(CompressedInput& jobs);
+    jobPrecision binTreeCompressed();
+
+    jobPrecision greedyCompressed();
+
+    jobPrecision greedyGapSelect(jobPrecision i);
+};

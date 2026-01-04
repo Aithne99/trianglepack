@@ -7,6 +7,7 @@ struct Job
     jobPrecision priority = 0;
     jobPrecision startTime = 0;
     Job(jobPrecision p = 0) : priority(p) {}
+    jobPrecision length() { return startTime + priority; }
 };
 
 // gap start time, gap height, "collision mode", ceiling start time

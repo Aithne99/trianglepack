@@ -24,9 +24,9 @@ int main()
     {
         std::cout << "--------------------------------------------------------\n\n";
         auto alg_start = std::chrono::high_resolution_clock::now();
-        bool checkFeas = inputs[i].tryToStoreTimes(true);
+        bool checkFeas = inputs[i].tryToStoreTimes(false);
 
-        jobPrecision makespan = binTreeCompressed(inputs[i]);
+        jobPrecision makespan = inputs[i].greedyCompressed();
 
         auto alg_end = std::chrono::high_resolution_clock::now();
         std::string inputtype(i % 2 ? " (anti-Bintree)" : " (anti-Greedy)");

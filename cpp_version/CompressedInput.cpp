@@ -135,8 +135,23 @@ void CompressedInput::reinitializeSizes()
 
 jobPrecision CompressedInput::calcLowerBound()
 {
+    std::queue<jobPrecision> twoS;
+    jobPrecision lb = 0;
+    jobPrecision j = 0;
     // 2 * S and j * p_j
-    return jobPrecision();
+    for (auto counts = jobSizes.rbegin(); counts != jobSizes.rend(); ++jobs)
+    {
+        j += counts->second;
+        lb = std::max(lb, counts->first * j);
+        for (jobPrecision si = 0; si < counts->second; ++si)
+        {
+            twoS.push(counts->first);
+            twoS.push(counts->first);
+            twoS.pop();
+            lb = std::max(lb, std::accumulate(twoS.front(), twoS.back()));
+        }
+    }
+    return lb;
 }
 
 // indexing on a full binary tree is easier, and we just return empty jobs if needed.

@@ -279,7 +279,7 @@ jobPrecision CompressedInput::binTreeCompressed()
     jobPrecision infoUnit = getSize() / 1000;
     if (log10(getSize()) < 8)
         infoUnit = getSize() / log10(getSize());
-    std::cout << "Info unit: " << infoUnit << "\n";
+    std::cout << "Bintree info unit: " << infoUnit << "\n";
     jobPrecision infoCounter = 0;
     jobPrecision makespan = priority;
     jobPrecision start = 0;
@@ -290,7 +290,7 @@ jobPrecision CompressedInput::binTreeCompressed()
         infoCounter += 1;
         if (infoCounter > infoUnit)
         {
-            std::cout << packIdx << " out of " << getSize() << " already packed for a makespan of " << makespan << std::endl;
+            std::cout << packIdx << " out of " << getSize() << " already scheduled for a makespan of " << makespan << std::endl;
             //out.flush();
             infoCounter = 0;
         }
@@ -367,7 +367,6 @@ jobPrecision CompressedInput::binTreeCompressed()
 jobPrecision CompressedInput::greedyCompressed()
 {
     jobPrecision makespan = 0;
-    std::cout << getSize();
     startTimes.resize(getSize());
     gapLengths.resize(getSize());
     jobPrecision i = 0;
@@ -383,7 +382,7 @@ jobPrecision CompressedInput::greedyCompressed()
     jobPrecision infoUnit = getSize() / 1000;
     if (log10(getSize()) < 8)
         infoUnit = getSize() / log10(getSize());
-    std::cout << "Info unit: " << infoUnit << "\n";
+    std::cout << "Greedy info unit: " << infoUnit << "\n";
 
     jobPrecision infoCounter = 0;
 
@@ -406,7 +405,7 @@ jobPrecision CompressedInput::greedyCompressed()
         infoCounter += 1;
         if (infoCounter > infoUnit)
         {
-            std::cout << i << " out of " << getSize() << " already packed for a makespan of " << makespan << std::endl;
+            std::cout << i << " out of " << getSize() << " already scheduled" << std::endl;
             infoCounter = 0;
         }
     }

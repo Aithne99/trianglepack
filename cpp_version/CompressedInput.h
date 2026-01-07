@@ -25,7 +25,7 @@ private:
 public:
     CompressedInput() {}
 
-    CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg);
+    //CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg);
 
     void addJob(jobPrecision size, jobPrecision count);
 
@@ -38,6 +38,8 @@ public:
     jobPrecision getHeight();
 
     void reinitializeSizes();
+
+    jobPrecision calcLowerBound();
 
     jobPrecision placementToIdx(jobPrecision place);
 

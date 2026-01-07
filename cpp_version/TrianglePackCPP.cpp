@@ -5,6 +5,7 @@
 #include <numeric>
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 
 typedef unsigned long long jobType;
 namespace old {
@@ -136,10 +137,13 @@ namespace old {
         jobType infoCounter = 0;
         jobType makespan = priority;
         jobType start = 0;
+        std::fstream out;
+        //out.open("E:/bintree_out_oldalg.txt", std::fstream::out);
         for (jobType packIdx = 1; packIdx < jobs.getSize(); packIdx++) {
             infoCounter += 1;
             if (infoCounter > infoUnit) {
-                //std::cout << packIdx << " out of " << jobs.getSize() << " already packed for a makespan of " << makespan << std::endl;
+                std::cout << packIdx << " out of " << jobs.getSize() << " already packed for a makespan of " << makespan << std::endl;
+                //out.flush();
                 infoCounter = 0;
             }
             // can be replaced with job object if we're using a container for real jobs
@@ -169,9 +173,9 @@ namespace old {
                     // we are not cutting into the next gap, so it remains a valid gap, and we put it back along with our own
                     if (start + priority < std::get<0>(nextTime)) {
                         startTimes.push({ start + priority, std::get<1>(testTime), 2, std::get<3>(testTime) });
-                        std::cout << "Trapezoid gap " << start + priority << " " << std::get<1>(testTime) << " " << std::get<3>(testTime) << "\n";
+                        //std::cout << "Trapezoid gap " << start + priority << " " << std::get<1>(testTime) << " " << std::get<3>(testTime) << "\n";
                         startTimes.push(nextTime);
-                        std::cout << "Next gap: " << std::get<0>(nextTime) << " " << std::get<1>(nextTime) << " " << std::get<2>(nextTime) << " " << std::get<3>(nextTime) << "\n";
+                        //std::cout << "Next gap: " << std::get<0>(nextTime) << " " << std::get<1>(nextTime) << " " << std::get<2>(nextTime) << " " << std::get<3>(nextTime) << "\n";
                     }
                     else {
                         // here we drop ALL the ceilings whose trapezoids we are cutting into, and this might even include pushing the infinite gap further to the right
@@ -202,28 +206,29 @@ namespace old {
                             ceilHeight = std::get<1>(tempTime);
                             ceilStart = std::get<3>(tempTime);
                             startTimes.push(nextTime);
-                            std::cout << "Next gap alt: " << std::get<0>(nextTime) << " " << std::get<1>(nextTime) << " " << std::get<2>(nextTime) << " " << std::get<3>(nextTime) << "\n";
+                            //std::cout << "Next gap alt: " << std::get<0>(nextTime) << " " << std::get<1>(nextTime) << " " << std::get<2>(nextTime) << " " << std::get<3>(nextTime) << "\n";
                         }
                         startTimes.push({ start + priority, ceilHeight, mode, ceilStart });
-                        std::cout << "follow gap alt: " << start + priority << " " << ceilHeight << " " << mode << " " << ceilStart << "\n";
+                        //std::cout << "follow gap alt: " << start + priority << " " << ceilHeight << " " << mode << " " << ceilStart << "\n";
                         makespan = std::max(makespan, start + priority);
                     }
                     startTimes.push({ start, priority, 1, start });
-                    std::cout << "self triangle gap: " << start << " " << priority << " " << start << "\n";
+                    //std::cout << "self triangle gap: " << start << " " << priority << " " << start << "\n";
                     break;
                 }
                 // this is for when we overhang ALL the previous ceilings, the most trivial example of this is when the input consists of uniform priority jobs.
                 if (startTimes.empty()) {
                     start = std::get<0>(testTime);
                     startTimes.push({ start, priority, 1, start });
-                    std::cout << "self triangle recreate: " << start << " " << priority << " " << start << "\n";
+                    //std::cout << "self triangle recreate: " << start << " " << priority << " " << start << "\n";
                     startTimes.push({ start + priority, priority, 0, start });
-                    std::cout << "infinite recreate: " << start + priority << " " << priority << " " << start << "\n";
+                    //std::cout << "infinite recreate: " << start + priority << " " << priority << " " << start << "\n";
                     makespan = std::max(makespan, start + priority);
                     break;
                 }
             }
             // this is where you assign the start value to a job object if you have an actual job object
+            //out << packIdx << " " << jobs.placementToIdx(packIdx) << " " << priority << " " << start << "\n";
         }
         std::cout << makespan << std::endl;
     }
@@ -232,20 +237,20 @@ namespace old {
 int maina() {
     old::CompressedInput input;
     // We upscale the manageably sized input programmatically
-    //std::vector<jobType> jobSizes = { 104976, 52488, 17496, 5832, 2916, 972, 324, 162, 54, 18, 9, 3, 1 };
-    //std::vector<jobType> jobCounts = { 1, 1, 4, 12, 18, 72, 216, 324, 1296, 3888, 5832, 23328, 69984 };
-    std::vector<jobType> jobSizes = { 6, 3, 1 };
-    std::vector<jobType> jobCounts = { 1, 1, 4 };
-    //for (size_t i = 0; i < jobSizes.size(); ++i) {
-    //    input.addJob(jobSizes[i] * jobSizes[0], jobCounts[i]);
-    //    if (jobSizes[i] != jobSizes[0]) {
-    //        input.addJob(jobSizes[i], jobCounts[i] * jobSizes[0]);
-    //    }
-    //}
+    std::vector<jobType> jobSizes = { 104976, 52488, 17496, 5832, 2916, 972, 324, 162, 54, 18, 9, 3, 1 };
+    std::vector<jobType> jobCounts = { 1, 1, 4, 12, 18, 72, 216, 324, 1296, 3888, 5832, 23328, 69984 };
+    //std::vector<jobType> jobSizes = { 6, 3, 1 };
+    //std::vector<jobType> jobCounts = { 1, 1, 4 };
+    for (size_t i = 0; i < jobSizes.size(); ++i) {
+        input.addJob(jobSizes[i] * jobSizes[0], jobCounts[i]);
+        if (jobSizes[i] != jobSizes[0]) {
+            input.addJob(jobSizes[i], jobCounts[i] * jobSizes[0]);
+        }
+    }
 
-    std::map<jobType, jobType> initialGreedy = { {96, 1}, {36, 1}, {24, 2}, {5, 12}, {3, 16} };
-    for (auto& j : initialGreedy)
-        input.addJob(j.first, j.second);
+    //std::map<jobType, jobType> initialGreedy = { {96, 1}, {36, 1}, {24, 2}, {5, 12}, {3, 16} };
+    //for (auto& j : initialGreedy)
+    //    input.addJob(j.first, j.second);
 
     auto alg_start = std::chrono::high_resolution_clock::now();
 

@@ -6,52 +6,53 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
-CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg)
-{
-    assert(initial.size() > 1);
-
-    // we should be able to just take the provided map as the set of jobs
-    if (!iterCount)
-    {
-        for (auto& mapItr : initial)
-        {
-            addJob(mapItr.first, mapItr.second);
-        }
-        return;
-    }
-    jobPrecision scaleFactor = 1;
-    jobPrecision maxJobSize = initial.rbegin()->first;
-    switch (alg)
-    {
-    case Antagonist::BINTREE_ANTAGONIST:
-    {
-        auto maxElement = initial.rbegin();
-        ++maxElement;
-        scaleFactor = maxElement->first * 2; // for combined antagonist inputs, we have to use a p_2 based scaling, as p_1 != 2 * p_2 for those
-        --maxElement;
-        break;
-    }
-    case Antagonist::GREEDY_ANTAGONIST:   
-    {
-        auto minElement = initial.begin();
-        scaleFactor = minElement->second * 2;
-    }
-    default:
-        break;
-    }
-    for (jobPrecision e = 1; e <= iterCount; ++e)
-    {
-        for (auto& mapItr : initial)
-        {
-            addJob(mapItr.first * iterSquareBlowup(scaleFactor, e), mapItr.second * iterSquareBlowup(scaleFactor, iterCount - e));
-            if (mapItr.first != maxJobSize)
-            {
-                addJob(mapItr.first * iterSquareBlowup(scaleFactor, iterCount - e), mapItr.second * iterSquareBlowup(scaleFactor, e));
-            }
-        }
-    }
-}
+//CompressedInput::CompressedInput(std::map<jobPrecision, jobPrecision> initial, jobPrecision iterCount, Antagonist alg)
+//{
+//    assert(initial.size() > 1);
+//
+//    // we should be able to just take the provided map as the set of jobs
+//    if (!iterCount)
+//    {
+//        for (auto& mapItr : initial)
+//        {
+//            addJob(mapItr.first, mapItr.second);
+//        }
+//        return;
+//    }
+//    jobPrecision scaleFactor = 1;
+//    jobPrecision maxJobSize = initial.rbegin()->first;
+//    switch (alg)
+//    {
+//    case Antagonist::BINTREE_ANTAGONIST:
+//    {
+//        auto maxElement = initial.rbegin();
+//        ++maxElement;
+//        scaleFactor = maxElement->first * 2; // for combined antagonist inputs, we have to use a p_2 based scaling, as p_1 != 2 * p_2 for those
+//        --maxElement;
+//        break;
+//    }
+//    case Antagonist::GREEDY_ANTAGONIST:   
+//    {
+//        auto minElement = initial.begin();
+//        scaleFactor = minElement->second * 2;
+//    }
+//    default:
+//        break;
+//    }
+//    for (jobPrecision e = 1; e <= iterCount; ++e)
+//    {
+//        for (auto& mapItr : initial)
+//        {
+//            addJob(mapItr.first * iterSquareBlowup(scaleFactor, e), mapItr.second * iterSquareBlowup(scaleFactor, iterCount - e));
+//            if (mapItr.first != maxJobSize)
+//            {
+//                addJob(mapItr.first * iterSquareBlowup(scaleFactor, iterCount - e), mapItr.second * iterSquareBlowup(scaleFactor, e));
+//            }
+//        }
+//    }
+//}
 
 void CompressedInput::addJob(jobPrecision size, jobPrecision count)
 {
@@ -130,6 +131,12 @@ void CompressedInput::reinitializeSizes()
         startTimes.clear();
         startTimes.resize(cacheRealSize);
     }
+}
+
+jobPrecision CompressedInput::calcLowerBound()
+{
+    // 2 * S and j * p_j
+    return jobPrecision();
 }
 
 // indexing on a full binary tree is easier, and we just return empty jobs if needed.
@@ -261,12 +268,15 @@ jobPrecision CompressedInput::binTreeCompressed()
     jobPrecision infoCounter = 0;
     jobPrecision makespan = priority;
     jobPrecision start = 0;
+    //std::fstream out;
+    //out.open("E:/bintree_out.txt", std::fstream::out);
     for (jobPrecision packIdx = 1; packIdx < getSize(); packIdx++)
     {
         infoCounter += 1;
         if (infoCounter > infoUnit)
         {
             std::cout << packIdx << " out of " << getSize() << " already packed for a makespan of " << makespan << std::endl;
+            //out.flush();
             infoCounter = 0;
         }
         // can be replaced with job object if we're using a container for real jobs
@@ -333,6 +343,7 @@ jobPrecision CompressedInput::binTreeCompressed()
         }
         // this is where you assign the start value to a job object if you have an actual job object
         setJobStartTime(packIdx, start);
+        //out << packIdx << " " << placementToIdx(packIdx) << " " << priority << " " << start << "\n";
     }
     std::cout << makespan << std::endl;
     return makespan;

@@ -135,20 +135,20 @@ void CompressedInput::reinitializeSizes()
 
 jobPrecision CompressedInput::calcLowerBound()
 {
-    std::queue<jobPrecision> twoS;
+    std::deque<jobPrecision> twoS;
     jobPrecision lb = 0;
     jobPrecision j = 0;
     // 2 * S and j * p_j
-    for (auto counts = jobSizes.rbegin(); counts != jobSizes.rend(); ++jobs)
+    for (auto counts = jobSizes.rbegin(); counts != jobSizes.rend(); ++counts)
     {
         j += counts->second;
         lb = std::max(lb, counts->first * j);
         for (jobPrecision si = 0; si < counts->second; ++si)
         {
-            twoS.push(counts->first);
-            twoS.push(counts->first);
-            twoS.pop();
-            lb = std::max(lb, std::accumulate(twoS.front(), twoS.back()));
+            twoS.push_back(counts->first);
+            twoS.push_back(counts->first);
+            twoS.pop_front();
+            lb = std::max(lb, std::accumulate(twoS.begin(), twoS.end(), jobPrecision(0)));
         }
     }
     return lb;

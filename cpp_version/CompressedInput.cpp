@@ -139,16 +139,20 @@ jobPrecision CompressedInput::calcLowerBound()
     jobPrecision lb = 0;
     jobPrecision j = 0;
     // 2 * S and j * p_j
+    jobPrecision tempLb = 0;
     for (auto counts = jobSizes.rbegin(); counts != jobSizes.rend(); ++counts)
     {
         j += counts->second;
         lb = std::max(lb, counts->first * j);
         for (jobPrecision si = 0; si < counts->second; ++si)
         {
+            tempLb += counts->first;
+            tempLb += counts->first;
             twoS.push_back(counts->first);
             twoS.push_back(counts->first);
+            tempLb -= twoS.front();
             twoS.pop_front();
-            lb = std::max(lb, std::accumulate(twoS.begin(), twoS.end(), jobPrecision(0)));
+            lb = std::max(lb, tempLb);
         }
     }
     return lb;
@@ -312,45 +316,53 @@ jobPrecision CompressedInput::binTreeCompressed()
             auto selfGap = std::make_shared<TriangleGap>(TriangleGap(start, priority, start));
             makespan = std::max(makespan, start + priority);
             // we are doing infinite gap here
-            while (!startTimes_.empty())
+            if (startTimes_.empty())
             {
-                auto nextGap = startTimes_.top();
-                // here we drop ALL the ceilings whose trapezoids we are cutting into, and this might even include pushing the infinite gap further to the right
-                // technically, trapezoid gaps can be degenerate (0-width), for example with inputs like 8, 4, 2, 2, 1, 1, 1, 1, where multiple rightmost points are above each other.
-                // we do handle that case, though, and all of those ceilings are popped
-                // _____
-                // p_k//
-                //   //
-                //  //____
-                // //p_l//
-                // ....
-                // This is what is being cleared out here, and p_l can theoretically invalidate out any number of gaps created by earlier jobs
-                jobPrecision ceilHeight = 0;
-                jobPrecision ceilStart = 0;
-                while (nextGap->startTime <= start + priority && !startTimes_.empty())
+                auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
+                startTimes_.push(addGap);
+            }
+            else
+            {
+                while (!startTimes_.empty())
                 {
-                    testGap = nextGap;
-                    nextGap = startTimes_.top();
-                    startTimes_.pop();
-                }
-                if (startTimes_.empty())
-                {
-                    auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
-                    startTimes_.push(addGap);
-                    break;
-                }
-                // we are not cutting into the next gap, so it remains a valid gap, and we put it back along with our own
-                else
-                {
-                    ceilHeight = testGap->gapHeight;
-                    ceilStart = testGap->ceilingStart;
-                    //std::cout << "Found gaps: ";
-                    auto newGap = std::make_shared<TrapezoidGap>(TrapezoidGap(start + priority, ceilHeight, ceilStart));
-                    startTimes_.push(newGap);
-                    //std::cout << *newGap << *nextGap << *selfGap;
-                    startTimes_.push(nextGap);
-                    makespan = std::max(makespan, start + priority);
-                    break;
+                    auto nextGap = startTimes_.top();
+                    // here we drop ALL the ceilings whose trapezoids we are cutting into, and this might even include pushing the infinite gap further to the right
+                    // technically, trapezoid gaps can be degenerate (0-width), for example with inputs like 8, 4, 2, 2, 1, 1, 1, 1, where multiple rightmost points are above each other.
+                    // we do handle that case, though, and all of those ceilings are popped
+                    // _____
+                    // p_k//
+                    //   //
+                    //  //____
+                    // //p_l//
+                    // ....
+                    // This is what is being cleared out here, and p_l can theoretically invalidate out any number of gaps created by earlier jobs
+                    jobPrecision ceilHeight = 0;
+                    jobPrecision ceilStart = 0;
+                    while (nextGap->startTime <= start + priority && !startTimes_.empty())
+                    {
+                        testGap = nextGap;
+                        nextGap = startTimes_.top();
+                        startTimes_.pop();
+                    }
+                    if (startTimes_.empty() && nextGap->startTime <= start + priority)
+                    {
+                        auto addGap = std::make_shared<InfiniteGap>(InfiniteGap(start + priority, priority, start));
+                        startTimes_.push(addGap);
+                        break;
+                    }
+                    // we are not cutting into the next gap, so it remains a valid gap, and we put it back along with our own
+                    else
+                    {
+                        ceilHeight = testGap->gapHeight;
+                        ceilStart = testGap->ceilingStart;
+                        //std::cout << "Found gaps: ";
+                        auto newGap = std::make_shared<TrapezoidGap>(TrapezoidGap(start + priority, ceilHeight, ceilStart));
+                        startTimes_.push(newGap);
+                        //std::cout << *newGap << *nextGap << *selfGap;
+                        startTimes_.push(nextGap);
+                        makespan = std::max(makespan, start + priority);
+                        break;
+                    }
                 }
             }
             startTimes_.push(selfGap);

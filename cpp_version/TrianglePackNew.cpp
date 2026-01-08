@@ -3,7 +3,7 @@
 #include "JobDef.h"
 #include "CompressedInput.h"
 #include <random>
-
+#include <fstream>
 
 int main()
 {
@@ -28,7 +28,8 @@ int main()
     std::mt19937 rng;
     rng.seed(68);
     std::uniform_real_distribution<double> dist(0.4, 0.6); // Bintree ratio will be near 2
-
+    //std::fstream out;
+    //out.open(<filename>);
     for (int i = 24; i < 51; ++i)
     {
         std::vector<CompressedInput> inputs(3);
@@ -72,12 +73,28 @@ int main()
             }
         }
 
+        //for (auto& input : inputs)
+        //{
+        //    out << "Input " << i << " size " << input.getRealSize() << "\n";
+        //    for (auto& elem : input.jobSizes)
+        //    {
+        //        out << elem.first << " " << elem.second << "\n";
+        //    }
+        //    out << "\n";
+        //}
+
+        //out << "\n";
+        //out.flush();
+
+        if (i < 38)
+            continue;
+
         for (auto& input : inputs)
         {
-            double lb = input.calcLowerBound();
+            jobPrecision lb = input.calcLowerBound();
+            std::cout << "\n--------------------------------------------------------\n\n";
             std::cout << "Lower bound for input " << i << " size " << input.getRealSize() << " is " << lb << "\n";
             {
-                std::cout << "\n--------------------------------------------------------\n\n";
                 auto greedy_start = std::chrono::high_resolution_clock::now();
 
                 jobPrecision makespan = input.greedyCompressed();
@@ -102,7 +119,7 @@ int main()
                     << std::chrono::duration_cast<std::chrono::seconds>(bintree_end - bintree_start).count()
                     << " seconds\n";
 
-                std::cout << "Approximation ratio estimate for bintree: " << (double)makespan / lb << "\n";
+                std::cout << "Approximation ratio estimate for bintree: " << (double)makespan / (double)lb << "\n";
             }
         }
     }
